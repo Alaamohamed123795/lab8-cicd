@@ -1,0 +1,29 @@
+services:
+  app:
+    image: dpqusd250103/lab6-app:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://appuser:apppass@db:5432/appdb
+      - MODE=compose
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: apppass
+      POSTGRES_DB: appdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d appdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
